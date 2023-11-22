@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UDP Client with WebSocket API</title>
+</head>
+<body>
+  <textarea id="output" cols="40" rows="10"></textarea>
+  <input type="text" id="input" placeholder="Type your request">
+  <button onclick="sendMessage()">Send</button>
+
+  <script>
+    const serverName = 'localhost';
+    const serverPort = 3306;
+    const socket = new WebSocket(`ws://${serverName}:${serverPort}`);
+    socket.addEventListener('open', (event) => {
+      console.log('WebSocket connection established');
+    });
+
+    socket.addEventListener('message', (event) => {
+      const response = event.data;
+      console.log('Data received from server:', response);
+      document.getElementById('output').value = `Server response: ${response}`;
+    });
+
+    socket.addEventListener('close', (event) => {
+      console.log('WebSocket connection closed');
+    });
+
+    socket.addEventListener('error', (event) => {
+      console.error('WebSocket error:', event);
+    });
+
+    function sendMessage() {
+      const inputElement = document.getElementById('input');
+      const message = inputElement.value;
+      if (message.toLowerCase() === 'exit') {
+        socket.close();
+      } else {
+        socket.send(message);
+      }
+      inputElement.value = '';
+    }
+  </script>
+</body>
+</html>
