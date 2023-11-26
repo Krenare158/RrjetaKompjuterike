@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebSocket Server</title>
+</head>
+<body>
+  <script>
+    const serverPort = 3000;  
+    const serverAddress = '127.0.0.1';  
+
+    const wss = new WebSocketServer({ port: serverPort });
+
+    const groupMembers = [];
+
+    //Një dëgjues për kur një klient lidhet me serverin
+    wss.on('connection', (ws) => {
+      groupMembers.push(ws);
+
+    console.log('Client connected');
+
+      //Një dëgjues për kur klienti dërgon një mesazh
+      ws.on('message', (message) => {
+        console.log(`Received message from client: ${message}`);
+
+
+         //logjika e serverit bazuar në mesazhin e dërguar nga klienti
+
+        
+        ws.send('Server: Message received');
+      });
+
+      // Për shembull, nëse kërkesa është për të lexuar një skedar të caktuar
+        // dhe klienti ka qasje të lejuar, atëherë dërgo skedarin te klienti.
+        if (message.startsWith('READ_FILE:')) {
+          const fileName = message.split(':')[1];
+          if (clientHasPermission(ws, fileName)) {
+            ws.send(`Server: File content for ${fileName}`);
+          } else {
+            ws.send(`Server: Permission denied for ${fileName}`);
+          }
+        } else {
+          //Në rast të kërkesave të tjera
+          ws.send('Server: Message received');
+        }
+      });
+
+      //Një dëgjues për kur klienti mbyll lidhjen
+      ws.on('close', () => {
+        //Largon klientin nga lista e anëtarëve të grupit
+        const index = groupMembers.indexOf(ws);
+        if (index > -1) {
+          groupMembers.splice(index, 1);
+        }
+
+        console.log('Client disconnected');
+      });
+
+      // Funksioni për të verifikuar nëse klienti ka qasje të lejuar për një skedar të caktuar
+    function clientHasPermission(client, fileName) {
+      // Këtu mund të implementoni logjikën e qasjes së klientit në skedarin e caktuar.
+      // Për qëllime demonstrative, le të thonë se çdo klient ka qasje të lejuar për çdo skedar.
+      return true;
+    }
+
+  </script>
+</body>
+</html>
