@@ -3,70 +3,57 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WebSocket Server</title>
+  <title>WebSocket Client</title>
 </head>
 <body>
   <script>
-    const serverPort = 3000;  
-    const serverAddress = '127.0.0.1';  
+    const serverPort = 3000;
+    const serverAddress = 'ws://127.0.0.1:' + serverPort;
 
-    const wss = new WebSocketServer({ port: serverPort });
+    const ws = new WebSocket(serverAddress);
 
-    const groupMembers = [];
+    ws.addEventListener('open', () => {
+      console.log('Connected to the server');
+    });
 
-    //Një dëgjues për kur një klient lidhet me serverin
-    wss.on('connection', (ws) => {
-      groupMembers.push(ws);
+    ws.addEventListener('message', (event) => {
+      const message = event.data;
+      console.log(`Received message from server: ${message}`);
 
-    console.log('Client connected');
+      //Logjika e  client-side bazuar ne mesazhin e marrur nga serveri
 
-      //Një dëgjues për kur klienti dërgon një mesazh
-      ws.on('message', (message) => {
-        console.log(`Received message from client: ${message}`);
-
-
-         //logjika e serverit bazuar në mesazhin e dërguar nga klienti
-
-        
-        ws.send('Server: Message received');
-      });
-
-      // Për shembull, nëse kërkesa është për të lexuar një skedar të caktuar
-        // dhe klienti ka qasje të lejuar, atëherë dërgo skedarin te klienti.
-        if (message.startsWith('READ_FILE:')) {
-          const fileName = message.split(':')[1];
-          if (clientHasPermission(ws, fileName)) {
-            ws.send(`Server: File content for ${fileName}`);
-          } else {
-            ws.send(`Server: Permission denied for ${fileName}`);
-          }
+      //Per shembull, nese kerkesa eshte te lexohet nje fajll specifik
+      if (message.startsWith('Server: READ_FILE:')) {
+        const fileName = message.split(':')[2];
+        if (clientHasPermission(ws, fileName)) {
+          console.log(`Server: File content for ${fileName}`);
         } else {
-          //Në rast të kërkesave të tjera
-          ws.send('Server: Message received');
+          console.log(`Server: Permission denied for ${fileName}`);
         }
-      });
+      } else {
+        // Per kerkesa tjera
+        console.log('Server: Message received');
+      }
+    });
 
-      //Një dëgjues për kur klienti mbyll lidhjen
-      ws.on('close', () => {
-        //Largon klientin nga lista e anëtarëve të grupit
-        const index = groupMembers.indexOf(ws);
-        if (index > -1) {
-          groupMembers.splice(index, 1);
-        }
+    ws.addEventListener('close', () => {
+      console.log('Connection closed');
+    });
 
-        console.log('Client disconnected');
-      });
+    //Logjika e client-side per te derguar nje mesazh tek serveri
+    function sendMessageToServer(message) {
+      ws.send(message);
+    }
 
-       // Lista e anëtarëve të grupit me qasje të plote
-const clientsWithFullAccess = [];
+    sendMessageToServer('Client: Hello, Server!');
 
-function clientHasPermission(client, fileName) {
+    // Lista e klienteve qe kane qasje te plote (client-side)
+    const clientsWithFullAccess = [];
 
-  //logjika e qasjes së klientit në skedarin e caktuar
-
-  return clientsWithFullAccess.includes(client);
-}
-
+    function clientHasPermission(client, fileName) {
+      //Logjika e client-side per te kontrolluar qasjen e klientit per nje fajll specifik
+      return clientsWithFullAccess.includes(client);
+    }
   </script>
 </body>
 </html>
