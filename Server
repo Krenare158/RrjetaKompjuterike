@@ -57,12 +57,15 @@
         console.log('Client disconnected');
       });
 
-      // Funksioni për të verifikuar nëse klienti ka qasje të lejuar për një skedar të caktuar
-    function clientHasPermission(client, fileName) {
-      // Këtu mund të implementoni logjikën e qasjes së klientit në skedarin e caktuar.
-      // Për qëllime demonstrative, le të thonë se çdo klient ka qasje të lejuar për çdo skedar.
-      return true;
-    }
+       // Lista e anëtarëve të grupit me qasje të plote
+const clientsWithFullAccess = [];
+
+function clientHasPermission(client, fileName) {
+
+  //logjika e qasjes së klientit në skedarin e caktuar
+
+  return clientsWithFullAccess.includes(client);
+}
 
   </script>
 </body>
