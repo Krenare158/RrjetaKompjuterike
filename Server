@@ -1,59 +1,71 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WebSocket Client</title>
-</head>
-<body>
-  <script>
-    const serverPort = 3000;
-    const serverAddress = 'ws://127.0.0.1:' + serverPort;
+const net = require('net');
+const fs = require('fs');
+const path = require('path');
 
-    const ws = new WebSocket(serverAddress);
+const IP_ADDRESS = '127.0.0.1'; // Ndryshoni me IP adresën e dëshiruar
+const PORT_NUMBER = 3000; // Ndryshoni me numrin e portit të dëshiruar
 
-    ws.addEventListener('open', () => {
-      console.log('Connected to the server');
-    });
+const server = net.createServer((socket) => {
+  console.log('Klienti u lidh');
 
-    ws.addEventListener('message', (event) => {
-      const message = event.data;
-      console.log(`Received message from server: ${message}`);
+  // Lista e anëtarëve të grupit
+  const groupMembers = [
+    { username: 'user1', permissions: ['read', 'write', 'execute'] },
+    { username: 'user2', permissions: ['read'] },
+    // Shtoni anëtarë të tjerë sipas nevojave
+  ];
 
-      //Logjika e  client-side bazuar ne mesazhin e marrur nga serveri
+  // Të dëgjojë për kërkesat e pajisjeve
+  socket.on('data', (data) => {
+    const request = data.toString().trim().split(' ');
 
-      //Per shembull, nese kerkesa eshte te lexohet nje fajll specifik
-      if (message.startsWith('Server: READ_FILE:')) {
-        const fileName = message.split(':')[2];
-        if (clientHasPermission(ws, fileName)) {
-          console.log(`Server: File content for ${fileName}`);
+    // Gjej anëtarin në grup me username e dhënë
+    const member = groupMembers.find((m) => m.username === request[0]);
+
+    // Verifikoni se anëtari ekziston dhe ka lidhjen e duhur
+    if (member) {
+      // Përpuno kërkesën duke kontrolluar privilegjet
+      if (member.permissions.includes(request[1])) {
+        if (request[1] === 'read') {
+          // Logjika për lexim
+          console.log(`${member.username} ka kërkuar të lexojë.`);
+        } else if (request[1] === 'write') {
+          // Logjika për shkrim
+          console.log(`${member.username} ka kërkuar të shkruajë.`);
+        } else if (request[1] === 'execute') {
+          // Logjika për ekzekutim
+          console.log(`${member.username} ka kërkuar të ekzekutojë.`);
         } else {
-          console.log(`Server: Permission denied for ${fileName}`);
+          console.log('Kërkesë e panjohur');
         }
+
+        // Të jap qasje të plotë në folderat/përmbajtjen në server.
+        const filePath = path.join(__dirname, 'files', 'example.txt');
+        fs.readFile(filePath, 'utf8', (err, content) => {
+          if (err) {
+            console.error('Gabim në lexim të file-t.');
+            socket.write('Gabim në lexim të file-t.');
+          } else {
+            socket.write(content);
+          }
+        });
       } else {
-        // Per kerkesa tjera
-        console.log('Server: Message received');
+        console.log(`${member.username} nuk ka privilegjet e duhura për këtë kërkesë.`);
+        socket.write('Ju nuk keni privilegjet e duhura për këtë kërkesë.');
       }
-    });
-
-    ws.addEventListener('close', () => {
-      console.log('Connection closed');
-    });
-
-    //Logjika e client-side per te derguar nje mesazh tek serveri
-    function sendMessageToServer(message) {
-      ws.send(message);
+    } else {
+      console.log('Anëtari i grupit nuk u gjet.');
+      socket.write('Anëtari i grupit nuk u gjet.');
     }
+  });
 
-    sendMessageToServer('Client: Hello, Server!');
+  // Të dëgjojë për mbylljen e lidhjes
+  socket.on('end', () => {
+    console.log('Klienti u shkyç');
+  });
+});
 
-    // Lista e klienteve qe kane qasje te plote (client-side)
-    const clientsWithFullAccess = [];
-
-    function clientHasPermission(client, fileName) {
-      //Logjika e client-side per te kontrolluar qasjen e klientit per nje fajll specifik
-      return clientsWithFullAccess.includes(client);
-    }
-  </script>
-</body>
-</html>
+// Të dëgjojë në portin dhe adresën e caktuar
+server.listen(PORT_NUMBER, IP_ADDRESS, () => {
+  console.log(`Serveri është duke dëgjuar në ${IP_ADDRESS}:${PORT_NUMBER}`);
+});
