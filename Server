@@ -1,71 +1,28 @@
-const net = require('net');
-const fs = require('fs');
-const path = require('path');
+var PORT = 33333;
+var HOST = '';
+const fs = require ('fs');
+var path = 'mesazhi.txt';
+errorcode = "NUK KENI QASJE!"
 
-const IP_ADDRESS = '127.0.0.1'; // Ndryshoni me IP adresën e dëshiruar
-const PORT_NUMBER = 3000; // Ndryshoni me numrin e portit të dëshiruar
 
-const server = net.createServer((socket) => {
-  console.log('Klienti u lidh');
 
-  // Lista e anëtarëve të grupit
-  const groupMembers = [
-    { username: 'user1', permissions: ['read', 'write', 'execute'] },
-    { username: 'user2', permissions: ['read'] },
-    // Shtoni anëtarë të tjerë sipas nevojave
-  ];
+const { info } = require('console');
+var dgram = require('dgram');
+var server = dgram.createSocket('udp4');
 
-  // Të dëgjojë për kërkesat e pajisjeve
-  socket.on('data', (data) => {
-    const request = data.toString().trim().split(' ');
-
-    // Gjej anëtarin në grup me username e dhënë
-    const member = groupMembers.find((m) => m.username === request[0]);
-
-    // Verifikoni se anëtari ekziston dhe ka lidhjen e duhur
-    if (member) {
-      // Përpuno kërkesën duke kontrolluar privilegjet
-      if (member.permissions.includes(request[1])) {
-        if (request[1] === 'read') {
-          // Logjika për lexim
-          console.log(`${member.username} ka kërkuar të lexojë.`);
-        } else if (request[1] === 'write') {
-          // Logjika për shkrim
-          console.log(`${member.username} ka kërkuar të shkruajë.`);
-        } else if (request[1] === 'execute') {
-          // Logjika për ekzekutim
-          console.log(`${member.username} ka kërkuar të ekzekutojë.`);
-        } else {
-          console.log('Kërkesë e panjohur');
-        }
-
-        // Të jap qasje të plotë në folderat/përmbajtjen në server.
-        const filePath = path.join(__dirname, 'files', 'example.txt');
-        fs.readFile(filePath, 'utf8', (err, content) => {
-          if (err) {
-            console.error('Gabim në lexim të file-t.');
-            socket.write('Gabim në lexim të file-t.');
-          } else {
-            socket.write(content);
-          }
-        });
-      } else {
-        console.log(`${member.username} nuk ka privilegjet e duhura për këtë kërkesë.`);
-        socket.write('Ju nuk keni privilegjet e duhura për këtë kërkesë.');
-      }
-    } else {
-      console.log('Anëtari i grupit nuk u gjet.');
-      socket.write('Anëtari i grupit nuk u gjet.');
-    }
-  });
-
-  // Të dëgjojë për mbylljen e lidhjes
-  socket.on('end', () => {
-    console.log('Klienti u shkyç');
+server.on('listening', function() {
+  var address = server.address();
+ console.log(`Serveri udp eshte aktiv ne adresen:  ${address.address}:${address.port}`);
+});
+server.on('message', function(message, remote) {
+ console.log(remote.address + ':' + remote.port +' - ' + message);
+ const reply = 'Mesazhi ka arritur me sukses ne server!';
+ server.send(reply, 0, reply.length, remote.port, remote.address, function(err, bytes) {
+  if (err) throw err;
+  console.log(
+    `Pergjigja e serverit u dergua tek klienti ${remote.address}:${remote.port}`
+  );
   });
 });
 
-// Të dëgjojë në portin dhe adresën e caktuar
-server.listen(PORT_NUMBER, IP_ADDRESS, () => {
-  console.log(`Serveri është duke dëgjuar në ${IP_ADDRESS}:${PORT_NUMBER}`);
-});
+server.bind(PORT, HOST);
