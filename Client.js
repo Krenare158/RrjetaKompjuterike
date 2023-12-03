@@ -13,12 +13,12 @@ var dgram = require('dgram');
 
 
 if (client == '192.168.0.28') {
-  console.log("\nKeni qasje ne lexim the mbishkrim te file");
+  console.log("\nKeni qasje ne lexim dhe mbishkrim te file-it.");
   fs.chmod("mesazhi.txt", 0o600, () => {
     
     console.log("\nPermbajtja e file");
     console.log(fs.readFileSync("mesazhi.txt", 'utf8'));
-    const ndryshimi = prompt("Ndryshoni file si read and write: ");
+    const ndryshimi = prompt("Ndryshoni file-in: ");
 
     console.log("Ndryshimi i bere: ");
     fs.appendFileSync('mesazhi.txt',ndryshimi);
@@ -28,10 +28,10 @@ if (client == '192.168.0.28') {
 }
 else {
   fs.chmod(path, 777, () => {
-    console.log("\nPermbajtja e file");
+    console.log("\nPermbajtja e file-it:");
     console.log(fs.readFileSync(path, 'utf8'));
     
-    console.log("\nDuke lexuar file");
+    console.log("\nDuke lexuar file-in.");
     try {
       fs.writeFileSync(path, "Ky file sapo u editua.");
     }
@@ -49,5 +49,5 @@ var message = new Buffer.from(mesazhi);
 
 client.send(message, 0, message.length, PORT, HOST, function(err, bytes) {
   if (err) throw err;
-  console.log('Mesazhi udp u dergua me sukses ' + HOST +':'+ PORT);
+  console.log('Mesazhi udp u dergua me sukses: ' + HOST +':'+ PORT);
   });
