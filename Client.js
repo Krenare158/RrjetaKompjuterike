@@ -1,5 +1,5 @@
 const prompt = require("prompt-sync")({ sigint: true });
-var PORT = 33333;
+var PORT = 33331;
 const clientIP = prompt("Sheno IP Addresen tuaj: ");
 var client = clientIP;
 const ipAddress = prompt("Sheno IP Addresen me te cilen doni te lidheni : ");
